@@ -1,0 +1,95 @@
+#!/usr/bin/python
+#
+# Copyright 2013 SUSE Linux
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+
+from __future__ import print_function
+import argparse
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tarfile
+
+
+FORMAT_ENDING_MAP = {
+        "bztar": ".tar.bz2",
+        "gztar": ".tar.gz",
+        "tar": ".tar",
+        "zip": ".zip",
+        "ztar": ".tar"
+}
+
+
+def error(msg):
+    print("Error: {0}".format(msg), file=sys.stderr)
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Python setup.py sdist service")
+    parser.add_argument("--basename", required=True,
+                        help="Directory or tarball containing a setup.py file (glob)")
+    parser.add_argument("--dist-dir", default=".")
+    parser.add_argument("--format", default="bztar")
+    parser.add_argument("--verbose", default=None)  # OBS doesn't like action="count"
+    parser.add_argument("--filename", default=None,
+                        help="Source distributions filename (without ending)")
+    parser.add_argument("--outdir", default=None, help="ignore, required for services")
+    args = parser.parse_args()
+
+    files = glob.glob(args.basename)
+    if len(files) != 1:
+        error("Ambiguous basename {0}: {1}".format(args.basename, files))
+    else:
+        args.basename = files[0]
+
+    cur_dir = os.getcwd()
+    if tarfile.is_tarfile(args.basename):
+        # The tar_scm source service usually provides a tarball, so we have to extract
+        # that first before we can chdir() into it.
+        tf = tarfile.open(args.basename)
+        tar_dir = args.basename.rsplit(".tar")[0]
+        print("Extracting {0} to {1}".format(args.basename, tar_dir))
+        tf.extractall()
+        os.remove(args.basename)  # Drop the original tarball, we'll generate a fresh sdist
+        new_cwd = tar_dir
+    else:
+        new_cwd = args.basename
+
+    dist_dir = os.path.abspath(args.dist_dir)
+    cmdline = "{0} setup.py sdist --dist-dir {1} --format {2}".format(sys.executable,
+                                                                      dist_dir,
+                                                                      args.format)
+    os.chdir(new_cwd)
+    print(os.getcwd() + " " + cmdline)
+    if args.verbose:
+        output = subprocess.check_output(cmdline, shell=True)
+    else:
+        output = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True).communicate()[0]
+    os.chdir(cur_dir)
+
+    shutil.rmtree(new_cwd)  # Drop unpacked temporary directory again
+
+    if args.filename:
+        sdist_basename = re.match("removing '(.*)'", output.split("\n")[-2]).group(1)
+        sdist_ending = FORMAT_ENDING_MAP[args.format]
+        sdist_filename = "{0}{1}".format(sdist_basename, sdist_ending)
+        new_filename = "{0}{1}".format(args.filename, sdist_ending)
+        print("Renaming {0} to {1}".format(sdist_filename, new_filename))
+        os.rename(sdist_filename, new_filename)
+
