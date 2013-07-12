@@ -26,13 +26,11 @@ import sys
 import tarfile
 
 
-FORMAT_ENDING_MAP = {
-        "bztar": ".tar.bz2",
-        "gztar": ".tar.gz",
-        "tar": ".tar",
-        "zip": ".zip",
-        "ztar": ".tar"
-}
+FORMAT_ENDING_MAP = {"bztar": ".tar.bz2",
+                     "gztar": ".tar.gz",
+                     "tar": ".tar",
+                     "zip": ".zip",
+                     "ztar": ".tar"}
 
 
 def error(msg):
@@ -92,4 +90,3 @@ if __name__ == "__main__":
         new_filename = "{0}{1}".format(args.filename, sdist_ending)
         print("Renaming {0} to {1}".format(sdist_filename, new_filename))
         os.rename(sdist_filename, new_filename)
-
