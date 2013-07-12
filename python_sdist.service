@@ -1,8 +1,8 @@
 <service name="python_sdist">
   <summary>Python setup.py sdist service</summary>
-  <description>This service creates a source distribution (sdist) from a Python project (containing a setup.py file)/description>
+  <description>This service creates a source distribution (sdist) from a Python project (containing a setup.py file)</description>
   <param name="basename">
-    <description>Root directory of the setup.py file (glog)</description>
+    <description>Directory or tarball containing a setup.py file (glob)")</description>
     <required/>
   </param>
   <param name="dist-dir">
