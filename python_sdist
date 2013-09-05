@@ -26,11 +26,13 @@ import sys
 import tarfile
 
 
-FORMAT_ENDING_MAP = {"bztar": ".tar.bz2",
-                     "gztar": ".tar.gz",
-                     "tar": ".tar",
-                     "zip": ".zip",
-                     "ztar": ".tar"}
+FORMAT_ENDING_MAP = {
+        "bztar": ".tar.bz2",
+        "gztar": ".tar.gz",
+        "tar": ".tar",
+        "zip": ".zip",
+        "ztar": ".tar"
+}
 
 
 def error(msg):
@@ -42,7 +44,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Python setup.py sdist service")
     parser.add_argument("--basename", required=True,
                         help="Directory or tarball containing a setup.py file (glob)")
-    parser.add_argument("--dist-dir", default=".")
     parser.add_argument("--format", default="bztar")
     parser.add_argument("--verbose", default=None)  # OBS doesn't like action="count"
     parser.add_argument("--filename", default=None,
@@ -69,17 +70,22 @@ if __name__ == "__main__":
     else:
         new_cwd = args.basename
 
-    dist_dir = os.path.abspath(args.dist_dir)
-    cmdline = "{0} setup.py sdist --dist-dir {1} --format {2}".format(sys.executable,
-                                                                      dist_dir,
-                                                                      args.format)
+    cmdline = "{0} setup.py sdist --format {1}".format(sys.executable,
+                                                       args.format)
     os.chdir(new_cwd)
     print(os.getcwd() + " " + cmdline)
     if args.verbose:
         output = subprocess.check_output(cmdline, shell=True)
     else:
         output = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True).communicate()[0]
+    dist_path = glob.glob("dist/*")[0]
+    dist_file = os.path.basename(dist_path)
     os.chdir(cur_dir)
+    if os.path.exists(dist_file):
+        print("Nothing to do, Python source distribution didn't change")
+    else:
+        print("Creating {0}".format(dist_file))
+        os.rename(os.path.join(new_cwd, dist_path), dist_file)
 
     shutil.rmtree(new_cwd)  # Drop unpacked temporary directory again
 
@@ -90,3 +96,4 @@ if __name__ == "__main__":
         new_filename = "{0}{1}".format(args.filename, sdist_ending)
         print("Renaming {0} to {1}".format(sdist_filename, new_filename))
         os.rename(sdist_filename, new_filename)
+
