@@ -19,6 +19,7 @@ from __future__ import print_function
 import argparse
 import glob
 import os
+import os.path
 import re
 import shutil
 import subprocess
@@ -58,6 +59,8 @@ if __name__ == "__main__":
         args.basename = files[0]
 
     cur_dir = os.getcwd()
+    if os.path.isdir(args.basename):
+        new_cwd = args.basename
     if tarfile.is_tarfile(args.basename):
         # The tar_scm source service usually provides a tarball, so we have to extract
         # that first before we can chdir() into it.
@@ -68,7 +71,7 @@ if __name__ == "__main__":
         os.remove(args.basename)  # Drop the original tarball, we'll generate a fresh sdist
         new_cwd = tar_dir
     else:
-        new_cwd = args.basename
+        error("Unknown file type: {1}".format(args.basename))
 
     # giving sdist as extra arg does no work
     cmdline = ['./setup.py sdist','--format',args.format];
