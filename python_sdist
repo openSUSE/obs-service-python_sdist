@@ -71,7 +71,7 @@ if __name__ == "__main__":
         new_cwd = args.basename
 
     # giving sdist as extra arg does no work
-    cmdline = ['./setup.py sdist','--format',args.format];
+    cmdline = ['python ./setup.py sdist','--format',args.format];
     os.chdir(new_cwd)
     
     if args.verbose:
