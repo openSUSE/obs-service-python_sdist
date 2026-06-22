@@ -58,7 +58,7 @@ if __name__ == "__main__":
         args.basename = files[0]
 
     cur_dir = os.getcwd()
-    if tarfile.is_tarfile(args.basename):
+    if os.path.isfile(args.basename) and tarfile.is_tarfile(args.basename):
         # The tar_scm source service usually provides a tarball, so we have to extract
         # that first before we can chdir() into it.
         tf = tarfile.open(args.basename)
