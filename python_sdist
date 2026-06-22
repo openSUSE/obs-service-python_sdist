@@ -70,14 +70,9 @@ if __name__ == "__main__":
     else:
         new_cwd = args.basename
 
-    # giving sdist as extra arg does no work
-    cmdline = ['./setup.py sdist','--format',args.format];
     os.chdir(new_cwd)
-    
-    if args.verbose:
-        output = subprocess.check_output(cmdline, shell=False)
-    else:
-        output = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True).communicate()[0]
+    cmdline = ['python', 'setup.py', 'sdist', '--format', args.format]
+    output = subprocess.check_output(cmdline)
     dist_path = glob.glob("dist/*")[0]
     dist_file = os.path.basename(dist_path)
     os.chdir(cur_dir)
